@@ -1,5 +1,4 @@
-#include "ann.h"
-
+#include "layer.h"
 #include <vector>
 #include <cmath>
 #include <random>
@@ -27,31 +26,16 @@ double func(double x)
     for (int i = 0; i != 2; i++)
         ret += pow(x, i + 1);
     return ret;*/
-    //return 2 * x; // + dist(generator);
-    return sin(x); // + dist(generator);
+    return pow(x, 2); // + dist(generator);
+    //return sin(x); // + dist(generator);
 }
 
 int main()
 {
-    vector<Layer> layers;
-
-    for (int i = 0; i != 4; i++) {
-        Layer hidden;
-        hidden.activation_f = tanh;
-        hidden.derivative = tanh_derivative;
-        hidden.data = vector<double>(5, 0);
-        layers.push_back(hidden);
-    }
-
-    Layer out;
-    out.activation_f = y;
-    out.derivative = dy;
-    out.data = vector<double>(1, 0);
-
-    layers.push_back(out);
-
-    auto network = Ann(1, layers);
-    network.initialize();
+    InputLayer input_layer(1);
+    FullyConnectedLayer<InputLayer> hidden_layer(&input_layer, 5, 0.01, sigmoid, sigmoid_derivation);
+    FullyConnectedLayer<FullyConnectedLayer<InputLayer>> 
+        output_layer(&hidden_layer, 1, 0.1, y, dy);
 
     vector<vector<double>> input(30, vector<double>(1, 0));
     vector<vector<double>> output(30, vector<double>(1, 0));
@@ -63,9 +47,27 @@ int main()
         output[i][0] = func(pos);
     }
 
-    network.train(input, output, 1000, 0.1);
+    for (int iter = 0; iter != 1000; iter++)
+    {
+        for (int i = 0; i != input.size(); i++)
+        {
+            input_layer.input(input[i]);
+            auto data = output_layer.feed_forward();
+            std::vector<double> delta;
+            delta.push_back(data[0] - output[i][0]);
+            output_layer.back_propagation(delta);
+
+            if (i == 0)
+            {
+                double loss = 0.5 * (data[0] - output[i][0]) * (data[0] - output[i][0]);
+                cout << iter << ": " << loss << endl;
+            }
+        }
+    }
+
     for (auto predict : input) {
-        vector<double> pred = network.predict(predict);
+        input_layer.input(predict);
+        vector<double> pred = output_layer.feed_forward();
         double desired = func(predict[0]);
         /*cout << "predicted: " << pred[0] << endl;
         cout << "desired: " << desired << endl;*/

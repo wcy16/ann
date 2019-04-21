@@ -115,10 +115,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ann.h" />
+    <ClInclude Include="layer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ann.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
